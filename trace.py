@@ -39,11 +39,15 @@ def trace():
 	ipCount3 = 0
 	srcCount3 = 0
 	dstCount3 = 0
+	privateIP = 0
+	edgeCount = 0
+	target = 0
 
 	uniqueTrace = set()
 	uniqueIP = set()
 	uniqueSrc = set()
 	uniqueDst = set()
+	uniqueEdge = set()
 
 	nodeList = []
 	with open("TestNodeList") as f:
@@ -66,6 +70,8 @@ def trace():
 		dstCount2 = 0
 		ipCount2 = 0
 		flag = 0
+		privateIP = 0
+		edgeCount1 = 0
 
 		if not os.path.exists("/home/jay/RipeData/" + str(start_time) + "/all_nodes"):
 			os.makedirs("/home/jay/RipeData/" + str(start_time) + "/all_nodes")
@@ -85,6 +91,7 @@ def trace():
 		of9 = open("/home/jay/RipeData/" + str(start_time) + "/per_node/" + node + "/dst.txt", "w")
 		of10 = open("/home/jay/RipeData/" + str(start_time) + "/per_node/" + node + "/traceCount.txt", "w")
 		of11 = open("/home/jay/RipeData/" + str(start_time) + "/per_node/" + node + "/edgeList.txt", "w")
+		of15 = open("/home/jay/RipeData/" + str(start_time) + "/per_node/" + node + "/ipCount.txt", "w")
 		ofx = open("/home/jay/RipeData/" + str(start_time) + "/all_nodes/stats.txt", "w")	
 
 		try:
@@ -128,7 +135,9 @@ def trace():
 					flag = 0
 					ip = my_result.ip_path
 					if(my_result.is_success == 1):
-						newLine.append(my_result.source_address)
+						#newLine.append(my_result.source_address)
+						source = my_result.source_address
+						destination = my_result.destination_address
 						srcList.append(my_result.source_address)
 						dstList.append(my_result.destination_address)
 						for x in ip:
@@ -146,12 +155,15 @@ def trace():
 
 					# write parsed data to file
 					# trace strings and ip addresses
+					of1.write(source + ':' + destination + ' ')
+					hop = 1
 					for address in newLine:
-						of1.write(address)
+						of1.write(address + '-' + str(hop))
 						of2.write(address)
 						of1.write(' ')
 						of2.write('\n')
 						ipCount1 += 1
+						hop += 1
 					if (len(newLine) != 0):
 						of1.write('\n')
 						traceCount1 += 1
@@ -224,6 +236,29 @@ def trace():
 		# close file
 		of10.close()
 
+		# ip counts
+		with open("ipList.txt", "r") as f:
+
+			# create lists for all and unique
+		    ips = []
+		    uips = set()
+
+		    # fill both lists
+		    for item in f:
+		        ips.append(item)
+		        uips.add(item)
+
+		# compare unique to all and count all
+		for item in uips:
+			num = ips.count(item)
+
+			# write out to file
+			of15.write(str(num) + " " + item)
+
+		# close files
+		of15.close()
+		f.close()		
+
 		# initialize lists
 		edgeList = set()
 		starCounter = 1
@@ -236,7 +271,11 @@ def trace():
 
 			# split trace and push to list
 			for item in item.split():
-				trace.append(item)
+				if (':' in item):
+					pass
+				else:
+					item = item.split('-')
+					trace.append(item[0])
 
 			# find length of list
 			length = len(trace)
@@ -259,11 +298,13 @@ def trace():
 
 				# add to edgeList set (unique values only)
 				edgeList.add(str(first) + ' ' + str(second))
+				uniqueEdge.add(str(first) + ' ' + str(second))
 				i += 1
 
 		# write edgeList to file
 		for item in edgeList:
 			of11.write(item + '\n')
+			edgeCount1 += 1
 
 		# close file
 		of11.close()
@@ -276,8 +317,11 @@ def trace():
 		        	ip.append(line)
 		        uniqueIP.add(line)
 		f.close()
-		for item in ip:
+		#for item in ip:
+		for item in uniqueIP:
 			of7.write(item)
+			if (('10.0' in item) or ('192.168' in item) or ('172.16' in item)):
+				privateIP += 1
 			ipCount2 += 1
 		of7.close()
 
@@ -318,8 +362,10 @@ def trace():
 		of5.write("Total Destination IPs: " + str(dstCount1) + '\n')
 		of5.write("Unique Traces: " + str(traceCount2) + '\n')
 		of5.write("Unique IPs: " + str(ipCount2) + '\n')
+		of5.write("Private IPs: " + str(privateIP) + '\n')
 		of5.write("Unique Source IPs: " + str(srcCount2) + '\n')
 		of5.write("Unique Destination IPs: " + str(dstCount2) + '\n')
+		of5.write("Unique Edges: " + str(edgeCount1) + '\n')
 		of5.write("*************************************" + '\n')
 		of5.close()
 
@@ -353,11 +399,22 @@ def trace():
 		dstCount3 += 1
 	of14.close()
 
+	# unique edges (w/o '0's counted)
+	of15 = open("/home/jay/RipeData/" + str(start_time) + "/all_nodes/edges.txt", "w")
+	for item in uniqueEdge:
+		of15.write(item + '\n')
+		item = item.split(' ')
+
+		if (('.' in item[0]) and ('.' in item[1])):
+			edgeCount += 1
+	of15.close()
+
 	# write totals to file
 	ofx.write("Total Unique Traces: " + str(traceCount3) + '\n')
 	ofx.write("Total Unique IPs: " + str(ipCount3) + '\n')
 	ofx.write("Total Unique Source IPs: " + str(srcCount3) + '\n')
 	ofx.write("Total Unique Destination IPs: " + str(dstCount3) + '\n')
+	ofx.write("Total Unique Edges: " + str(edgeCount) + '\n')
 	ofx.close()
 
 	# update start_time.txt

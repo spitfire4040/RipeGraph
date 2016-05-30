@@ -2,21 +2,10 @@
 import sys
 import os
 import os.path
-#import json
-#import ijson
 import urllib
-#import urllib2
 import string
-#import time
-#import gzip
-#import datetime
-#from datetime import date, timedelta
-#import lxml.html
 from pymongo import MongoClient
-#import ast
 import collections
-#from bson import BSON
-#from bson import json_util
 from ripe.atlas.sagan import TracerouteResult
 
 start_time = 0

@@ -10,6 +10,14 @@ from ripe.atlas.sagan import TracerouteResult
 
 start_time = 0
 
+# convert ip string to integer value
+def ip2int(addr):                                                               
+	return struct.unpack("!I", socket.inet_aton(addr))[0]                       
+
+# convert integer value to ip string
+def int2ip(addr):                                                               
+	return socket.inet_ntoa(struct.pack("!I", addr)) 
+
 def convert(data):
     if isinstance(data, basestring):
         return str(data)
@@ -39,7 +47,7 @@ def trace():
 	uniqueEdge = set()
 
 	nodeList = []
-	with open("TestNodeList") as f:
+	with open("RipeNodeList") as f:
 		for line in f:
 			for word in line.split():
 				nodeList.append(word)
